@@ -139,11 +139,11 @@ final class api_test extends advanced_testcase {
             ]
         );
 
-		$zoomstudent = helper::get_user(helper::get_api_identifier($this->student));
+        $zoomstudent = helper::get_user(helper::get_api_identifier($this->student));
         $this->assertEquals($zoomstudentid, $zoomstudent['id']);
         $this->assertEquals($this->student->email, $zoomstudent['email']);
 
-		$zoomteacher = helper::get_user(helper::get_api_identifier($this->teacher));
+        $zoomteacher = helper::get_user(helper::get_api_identifier($this->teacher));
         $this->assertEquals($zoomteacherid, $zoomteacher['id']);
         $this->assertEquals($this->teacher->email, $zoomteacher['email']);
     }

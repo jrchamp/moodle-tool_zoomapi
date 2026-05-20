@@ -59,7 +59,6 @@ class api_exception extends moodle_exception {
      *
      * @param string $response Response body.
      * @param int $zoomerrorcode Response error code.
-     * @param mixed $a Extra words and phrases that might be required in the error string.
      */
     public function __construct($response, $zoomerrorcode) {
         $this->response = $response;

@@ -151,7 +151,7 @@ class api {
             }
 
             $scopetype = $this->get_scope_type($scopes);
-            $missingscopes = array_diff(helper::required_scopes($scopetype), $scopes);
+            $missingscopes = array_diff($this->required_scopes($scopetype), $scopes);
 
             if (!empty($missingscopes)) {
                 $missingscopes = implode(', ', $missingscopes);
@@ -185,8 +185,10 @@ class api {
      * @return string Access token
      */
     protected function get_behat_url() {
-		return $CFG->wwwroot . '/admin/tool/zoomapi/tests/behat/fixtures/mock_api.php';
-	}
+        global $CFG;
+
+        return $CFG->wwwroot . '/admin/tool/zoomapi/tests/behat/fixtures/mock_api.php';
+    }
 
     /**
      * Checks for the type of scope (classic or granular) of the user.
@@ -254,8 +256,6 @@ class api {
      * @throws moodle_exception Moodle exception is thrown for API errors.
      */
     protected function make_call($method, $path, $data = []) {
-        global $CFG;
-
         $headers = [
             'Accept' => 'application/json',
         ];
@@ -303,7 +303,7 @@ class api {
         $options['headers'] = $headers;
 
         if (defined('BEHAT_SITE_RUNNING')) {
-			$url = $this->get_behat_url();
+            $url = $this->get_behat_url();
             $options['verify'] = false;
         }
 
@@ -416,5 +416,28 @@ class api {
         } while ($moredata);
 
         return array_merge(...$aggregatedata);
+    }
+
+    /**
+     * Get the minimum set of required scopes.
+     *
+     * @param string $type Scope type is either granular or classic.
+     * @return string[]
+     */
+    protected function required_scopes($type = '') {
+        $requiredscopes = [
+            'granular' => [
+                'user:read:user:admin',
+            ],
+            'classic' => [
+                'user:read:admin',
+            ],
+        ];
+
+        if (!isset($requiredscopes[$type])) {
+            $type = 'granular';
+        }
+
+        return $requiredscopes[$type];
     }
 }
