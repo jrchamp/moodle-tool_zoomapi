@@ -26,6 +26,11 @@ use tool_zoomapi\helper;
 
 defined('MOODLE_INTERNAL') || die();
 
+if ($hassiteconfig) {
+    $settings = new admin_settingpage('tool_zoomapi', new lang_string('pluginname', 'tool_zoomapi'));
+    $ADMIN->add('tools', $settings);
+}
+
 if ($hassiteconfig && $ADMIN->fulltree) {
     // API settings section.
     $settings->add(new admin_setting_heading('tool_zoomapi_api', new lang_string('apisettings', 'tool_zoomapi'), ''));
