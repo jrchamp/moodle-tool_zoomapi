@@ -43,7 +43,7 @@ Navigate to **Site administration > Plugins > Admin tools > Zoom API** and provi
 ```php
 use tool_zoomapi\helper;
 
-$api = helper::api();
+$api = api::instance();
 ```
 
 ### Getting a User
@@ -76,12 +76,8 @@ $zoomuserid = helper::get_userid_optional();
 
 ```php
 use tool_zoomapi\api;
-use core\http_client;
 
-$client = new http_client();
-$api = new api($client);
-
-$user = $api->get_user('user@example.com');
+$user = api::instance()->get_user('user@example.com');
 ```
 
 ### Checking Scopes

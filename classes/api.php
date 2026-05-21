@@ -109,6 +109,15 @@ class api {
     }
 
     /**
+     * Get the singular, reusable API class instance.
+     *
+     * @return api
+     */
+    public static function instance() {
+        return \core\di::get(self::class);
+    }
+
+    /**
      * Create token.
      */
     private function create_token() {

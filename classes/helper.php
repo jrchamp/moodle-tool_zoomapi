@@ -61,15 +61,6 @@ final class helper {
     }
 
     /**
-     * Get the singular, reusable API class instance.
-     *
-     * @return api
-     */
-    public static function api() {
-        return \core\di::get(api::class);
-    }
-
-    /**
      * Get the configured Zoom API URL.
      *
      * @return string The API URL.
@@ -153,7 +144,7 @@ final class helper {
         $user = $cache->get($identifier);
 
         if (empty($user)) {
-            $response = self::api()->get_user($identifier);
+            $response = api::instance()->get_user($identifier);
 
             if (!empty($response)) {
                 $user = $response;
