@@ -114,7 +114,7 @@ class api {
      * @return api
      */
     public static function instance() {
-        return \core\di::get(self::class);
+        return \core\di::get(static::class);
     }
 
     /**
