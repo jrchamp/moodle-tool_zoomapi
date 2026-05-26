@@ -160,7 +160,7 @@ class api {
             }
 
             $scopetype = $this->get_scope_type($scopes);
-            $missingscopes = array_diff($this->required_scopes($scopetype), $scopes);
+            $missingscopes = array_diff(static::required_scopes($scopetype), $scopes);
 
             if (!empty($missingscopes)) {
                 $missingscopes = implode(', ', $missingscopes);
@@ -433,7 +433,7 @@ class api {
      * @param string $type Scope type is either granular or classic.
      * @return string[]
      */
-    protected function required_scopes($type = '') {
+    public static function required_scopes($type = '') {
         $requiredscopes = [
             'granular' => [
                 'user:read:user:admin',
