@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="admin/tool/zoomapi/db" VERSION="2026060300" COMMENT="XMLDB file for Moodle tool_zoomapi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="tool_zoomapi_user_mappings" COMMENT="Maps Moodle users to Zoom users">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle user ID"/>
+        <FIELD NAME="zoom_userid" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Zoom user ID"/>
+        <FIELD NAME="zoom_email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Zoom account email"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id" COMMENT="One Moodle user maps to one Zoom user"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx-zoom-userid" UNIQUE="true" FIELDS="zoom_userid" COMMENT="One Zoom user maps to one Moodle user"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

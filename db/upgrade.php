@@ -33,9 +33,22 @@ function xmldb_tool_zoomapi_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
-    // Sample of an empty step.
-    if ($oldversion < 2026052000) {
-        upgrade_plugin_savepoint(true, 2026052000, 'tool', 'zoomapi');
+    if ($oldversion < 2026060300) {
+        $table = new xmldb_table('tool_zoomapi_user_mappings');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null);
+        $table->add_field('zoom_userid', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null);
+        $table->add_field('zoom_email', XMLDB_TYPE_CHAR, '255', null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN_UNIQUE, ['userid'], 'user', ['id']);
+
+        $table->add_index('idx-zoom-userid', XMLDB_INDEX_UNIQUE, ['zoom_userid']);
+
+        $dbman->create_table($table);
+
+        upgrade_plugin_savepoint(true, 2026060300, 'tool', 'zoomapi');
     }
 
     return true;

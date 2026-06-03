@@ -25,7 +25,10 @@
 namespace tool_zoomapi;
 
 use cache;
+use core\clock;
+use core\di;
 use moodle_exception;
+use stdClass;
 
 /**
  * Helper class for tool_zoomapi.
@@ -97,7 +100,6 @@ final class helper {
         try {
             $zoomuserid = self::get_userid();
         } catch (moodle_exception $e) {
-            // Ignore exceptions.
             $zoomuserid = null;
         }
 
@@ -107,25 +109,63 @@ final class helper {
     /**
      * Get the current user's Zoom ID.
      *
-     * @throws moodle_exception When not user is found.
+     * @throws moodle_exception When no user is found.
      * @return string
      */
     public static function get_userid() {
         global $USER;
 
-        $apiidentifier = self::get_api_identifier($USER);
+        return self::get_zoom_userid($USER);
+    }
+
+    /**
+     * Get a Moodle user's Zoom user ID.
+     *
+     * Resolves via the Zoom API (by email) and stores the result in the
+     * mapping table for future reference.
+     *
+     * @param stdClass $user Moodle user object.
+     * @throws moodle_exception When no Zoom account is found.
+     * @return string Zoom user ID.
+     */
+    public static function get_zoom_userid(stdClass $user): string {
+        $apiidentifier = self::get_api_identifier($user);
         $zoomuser = self::get_user($apiidentifier);
 
-        if ($zoomuser !== false && !empty($zoomuser['id'])) {
-            $zoomuserid = $zoomuser['id'];
-        }
-
-        // No Zoom account was found, so throw an exception.
-        if (empty($zoomuser)) {
+        if (empty($zoomuser) || empty($zoomuser['id'])) {
             throw new moodle_exception('error:usernotfound', 'tool_zoomapi', '', $apiidentifier);
         }
 
-        return $zoomuserid;
+        self::store_user_mapping($user->id, $zoomuser['id'], $zoomuser['email'] ?? '');
+
+        return $zoomuser['id'];
+    }
+
+    /**
+     * Get a Moodle user ID from a Zoom user ID.
+     *
+     * Resolves via the Zoom API (email lookup) and stores the result in the
+     * mapping table for future reference.
+     *
+     * @param string $zoomid Zoom user ID.
+     * @return int|null Moodle user ID, or null if not found.
+     */
+    public static function get_moodle_userid(string $zoomid): ?int {
+        global $DB;
+
+        $zoomuser = self::get_user($zoomid);
+        if (empty($zoomuser) || empty($zoomuser['email'])) {
+            return null;
+        }
+
+        $moodleuser = $DB->get_record('user', ['email' => $zoomuser['email'], 'deleted' => 0]);
+        if (!$moodleuser) {
+            return null;
+        }
+
+        self::store_user_mapping($moodleuser->id, $zoomid, $zoomuser['email']);
+
+        return (int) $moodleuser->id;
     }
 
     /**
@@ -135,6 +175,8 @@ final class helper {
      * @return array|false User array if found, otherwise false.
      */
     public static function get_user($identifier) {
+        global $DB;
+
         $cache = cache::make('tool_zoomapi', 'users');
 
         if (empty($identifier)) {
@@ -155,9 +197,47 @@ final class helper {
                         strtolower($user['email']) => $user,
                     ]
                 );
+
+                if (strpos($identifier, '@') !== false) {
+                    $moodleuser = $DB->get_record('user', ['email' => $identifier, 'deleted' => 0]);
+                    if ($moodleuser) {
+                        self::store_user_mapping($moodleuser->id, $user['id'], $user['email'] ?? '');
+                    }
+                }
             }
         }
 
         return $user;
+    }
+
+    /**
+     * Persist a Moodle-to-Zoom user mapping.
+     *
+     * @param int $userid Moodle user ID.
+     * @param string $zoomuserid Zoom user ID.
+     * @param string $zoomemail Zoom account email.
+     */
+    private static function store_user_mapping(int $userid, string $zoomuserid, string $zoomemail): void {
+        global $DB;
+
+        $record = $DB->get_record('tool_zoomapi_user_mappings', ['userid' => $userid]);
+        if ($record && $record->zoom_userid === $zoomuserid && $record->zoom_email === $zoomemail) {
+            return;
+        }
+
+        $mapping = (object) [
+            'userid' => $userid,
+            'zoom_userid' => $zoomuserid,
+            'zoom_email' => $zoomemail,
+            'timemodified' => di::get(clock::class)->time(),
+        ];
+
+        if ($record) {
+            $mapping->id = $record->id;
+            $DB->update_record('tool_zoomapi_user_mappings', $mapping);
+            return;
+        }
+
+        $DB->insert_record('tool_zoomapi_user_mappings', $mapping);
     }
 }

@@ -25,6 +25,8 @@
 namespace tool_zoomapi;
 
 use cache;
+use core\clock;
+use core\di;
 use core\encryption;
 use core\http_client;
 use moodle_exception;
@@ -139,7 +141,7 @@ class api {
 
         $token = $cache->get('accesstoken');
         $expires = $cache->get('expires');
-        $now = time();
+        $now = di::get(clock::class)->time();
 
         if (empty($token) || empty($expires) || $now >= $expires) {
             $response = $this->create_token();
@@ -359,7 +361,7 @@ class api {
                         $retryafter = strtotime($header['retry-after']);
                         if ($retryafter > 1) {
                             $message .= '; retry after ' . $retryafter;
-                            $timediff = $retryafter - time();
+                            $timediff = $retryafter - di::get(clock::class)->time();
                         }
 
                         if (!empty($header['x-ratelimit-remaining'])) {
