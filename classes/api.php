@@ -41,6 +41,12 @@ class api {
      */
     public const MAX_RETRIES = 5;
 
+    /** @var int Zoom API error code: user not found. */
+    public const ERROR_USER_NOT_FOUND = 1001;
+
+    /** @var int Zoom API error code: invalid user. */
+    public const ERROR_INVALID_USER = 1120;
+
     /**
      * Account ID
      * @var string
@@ -226,12 +232,12 @@ class api {
 
         try {
             $founduser = $this->make_call('get', $url);
-        } catch (webservice_exception $error) {
-            if (zoom_is_user_not_found_error($error)) {
+        } catch (api_exception $error) {
+            if ($error->zoomerrorcode === self::ERROR_USER_NOT_FOUND || $error->zoomerrorcode === self::ERROR_INVALID_USER) {
                 return false;
-            } else {
-                throw $error;
             }
+
+            throw $error;
         }
 
         return $founduser;
