@@ -2,6 +2,9 @@ name: Moodle Plugin CI
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: 'ubuntu-latest'
@@ -55,6 +58,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: plugin
+          persist-credentials: false
 
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -111,10 +115,6 @@ jobs:
         if: ${{ !cancelled() && steps.install_ci.outcome == 'success' && matrix.php >= '7.4' }}
         run: moodle-plugin-ci phpdoc --max-warnings 0
 
-      - name: Moodle PHPDoc Checker v3
-        if: ${{ !cancelled() && steps.install_ci.outcome == 'success' && matrix.php < '7.4' }}
-        run: moodle-plugin-ci phpdoc
-
       - name: Validating
         if: ${{ !cancelled() && steps.install_ci.outcome == 'success' }}
         run: moodle-plugin-ci validate
@@ -129,7 +129,7 @@ jobs:
 
       - name: Grunt
         if: ${{ !cancelled() && steps.install_ci.outcome == 'success' }}
-        run: moodle-plugin-ci grunt --max-lint-warnings 0 || [ "$MOODLE_BRANCH" = 'MOODLE_39_STABLE' ] || [ "$MOODLE_BRANCH" = 'MOODLE_311_STABLE' ]
+        run: moodle-plugin-ci grunt --max-lint-warnings 0
         env:
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
