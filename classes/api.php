@@ -24,12 +24,13 @@
 
 namespace tool_zoomapi;
 
-use cache;
 use core\clock;
 use core\di;
 use core\encryption;
+use core\exception\moodle_exception;
 use core\http_client;
-use moodle_exception;
+use core_cache\cache;
+use Exception;
 
 /**
  * API class.
@@ -331,7 +332,7 @@ class api {
         }
 
         $rawresponse = $result->getBody()->getContents();
-        $response = json_decode($rawresponse, true);
+        $response = json_decode($rawresponse, true) ?? [];
 
         $httpstatus = (int) $result->getStatusCode();
 
@@ -431,6 +432,10 @@ class api {
                 }
             }
         } while ($moredata);
+
+        if (empty($aggregatedata)) {
+            return [];
+        }
 
         return array_merge(...$aggregatedata);
     }

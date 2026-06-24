@@ -24,10 +24,10 @@
 
 namespace tool_zoomapi;
 
-use cache;
 use core\clock;
 use core\di;
-use moodle_exception;
+use core\exception\moodle_exception;
+use core_cache\cache;
 use stdClass;
 
 /**
@@ -70,7 +70,7 @@ final class helper {
      */
     public static function get_token_url() {
         // Get the API endpoint setting.
-        $apiendpoint = get_config('tool_zoomapi', 'apiendpoint');
+        $apiendpoint = get_config('tool_zoomapi', 'api');
 
         // If not found, default to the global endpoint.
         if (!isset(self::OAUTH_HOSTS[$apiendpoint])) {

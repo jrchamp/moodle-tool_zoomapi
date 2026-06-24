@@ -24,7 +24,7 @@
 
 namespace tool_zoomapi;
 
-use moodle_exception;
+use core\exception\moodle_exception;
 
 /**
  * API exception class.

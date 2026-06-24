@@ -36,6 +36,7 @@ $string['clientsecret_desc'] = 'Client Secret from your Zoom Marketplace App';
 $string['error:api'] = 'Zoom API request failed: {$a}';
 $string['error:apiurl'] = 'Zoom OAuth response did not provide the API URL';
 $string['error:notconfigured'] = 'Missing required Zoom API credentials';
+$string['error:requiredscopes'] = 'The Zoom OAuth app is missing one or more required OAuth scopes: {$a}';
 $string['error:token'] = 'Error obtaining OAuth access token from Zoom';
 $string['error:usernotfound'] = 'Could not find a Zoom account with the email address "{$a}". Please ensure your Moodle email matches your Zoom account email.';
 $string['pluginname'] = 'Zoom API';

@@ -24,8 +24,7 @@
 
 namespace tool_zoomapi\privacy;
 
-use context;
-use context_system;
+use core\context;
 use core_privacy\local\metadata\collection;
 use core_privacy\local\metadata\provider as metadata_provider;
 use core_privacy\local\request\approved_contextlist;
