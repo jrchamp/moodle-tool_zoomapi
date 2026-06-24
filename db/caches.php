@@ -34,4 +34,9 @@ $definitions = [
         'mode' => cache_store::MODE_APPLICATION,
         'simpledata' => true,
     ],
+    'unresolved' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simpledata' => true,
+        'ttl' => 3600,
+    ],
 ];

@@ -177,37 +177,48 @@ final class helper {
     public static function get_user($identifier) {
         global $DB;
 
-        $cache = cache::make('tool_zoomapi', 'users');
-
         if (empty($identifier)) {
             return false;
         }
 
+        $cache = cache::make('tool_zoomapi', 'users');
         $user = $cache->get($identifier);
 
-        if (empty($user)) {
-            $response = api::instance()->get_user($identifier);
-
-            if (!empty($response)) {
-                $user = $response;
-
-                $cache->set_many(
-                    [
-                        $user['id'] => $user,
-                        strtolower($user['email']) => $user,
-                    ]
-                );
-
-                if (strpos($identifier, '@') !== false) {
-                    $moodleuser = $DB->get_record('user', ['email' => $identifier, 'deleted' => 0]);
-                    if ($moodleuser) {
-                        self::store_user_mapping($moodleuser->id, $user['id'], $user['email'] ?? '');
-                    }
-                }
-            }
+        if (!empty($user)) {
+            return $user;
         }
 
-        return $user;
+        $misscache = cache::make('tool_zoomapi', 'unresolved');
+
+        if ($misscache->get($identifier)) {
+            return false;
+        }
+
+        $response = api::instance()->get_user($identifier);
+
+        if (!empty($response)) {
+            $user = $response;
+
+            $cache->set_many(
+                [
+                    $user['id'] => $user,
+                    strtolower($user['email']) => $user,
+                ]
+            );
+
+            if (strpos($identifier, '@') !== false) {
+                $moodleuserid = $DB->get_field('user', 'id', ['email' => $identifier, 'deleted' => 0]);
+                if ($moodleuserid) {
+                    self::store_user_mapping($moodleuserid, $user['id'], $user['email'] ?? '');
+                }
+            }
+
+            return $user;
+        }
+
+        $misscache->set($identifier, true);
+
+        return false;
     }
 
     /**
