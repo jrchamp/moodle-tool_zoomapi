@@ -229,7 +229,7 @@ class api {
 
         // Classic: user:read:admin.
         // Granular: user:read:user:admin.
-        $url = 'users/' . $identifier;
+        $url = 'users/' . rawurlencode($identifier);
 
         try {
             $founduser = $this->make_call('get', $url);
@@ -350,33 +350,35 @@ class api {
                 if ($this->makecallretries < self::MAX_RETRIES) {
                     $retry = true;
 
-                    $header = $result->getHeaders();
-                    // Header can have mixed case, normalize it.
-                    $header = array_change_key_case($header, CASE_LOWER);
+                    // PSR-7 header values are arrays; getHeaderLine() returns a scalar.
+                    $ratelimittype = $result->getHeaderLine('x-ratelimit-type');
+                    $retryafterraw = $result->getHeaderLine('retry-after');
+                    $ratelimitremaining = $result->getHeaderLine('x-ratelimit-remaining');
 
                     // Default to 1 second for max requests per second limit.
                     $timediff = 1;
 
                     // Check if we hit the max requests per minute.
-                    if (
-                        isset($header['x-ratelimit-type']) &&
-                        $header['x-ratelimit-type'] == 'QPS' &&
-                        strpos($path, 'metrics') !== false
-                    ) {
+                    if ($ratelimittype === 'QPS' && strpos($path, 'metrics') !== false) {
                         $timediff = 60; // Try the next minute.
-                    } else if (isset($header['retry-after'])) {
-                        $retryafter = strtotime($header['retry-after']);
+                    } else if ($retryafterraw !== '') {
+                        $now = di::get(clock::class)->time();
+
+                        // Retry-After may be delta-seconds or an HTTP-date.
+                        $retryafter = is_numeric($retryafterraw)
+                            ? $now + (int) $retryafterraw
+                            : strtotime($retryafterraw);
                         if ($retryafter > 1) {
                             $message .= '; retry after ' . $retryafter;
-                            $timediff = $retryafter - di::get(clock::class)->time();
+                            $timediff = $retryafter - $now;
                         }
 
-                        if (!empty($header['x-ratelimit-remaining'])) {
-                            // When running CLI we might want to know how many calls remaining.
-                            debugging('x-ratelimit-remaining = ' . $header['x-ratelimit-remaining']);
-                        } else {
+                        if ($ratelimitremaining === '' || (int) $ratelimitremaining === 0) {
                             // If we have no API calls remaining, throw an exception.
                             $retry = false;
+                        } else {
+                            // When running CLI we might want to know how many calls remaining.
+                            debugging('x-ratelimit-remaining = ' . $ratelimitremaining);
                         }
                     }
 

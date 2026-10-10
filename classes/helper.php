@@ -28,6 +28,7 @@ use core\clock;
 use core\di;
 use core\exception\moodle_exception;
 use core_cache\cache;
+use dml_write_exception;
 use stdClass;
 
 /**
@@ -236,6 +237,17 @@ final class helper {
             return;
         }
 
+        // Duplicate email addresses may map several Moodle accounts to one Zoom
+        // user; keep the existing mapping instead of violating the unique index.
+        $existing = $DB->get_record('tool_zoomapi_user_mappings', ['zoom_userid' => $zoomuserid]);
+        if ($existing && (int) $existing->userid !== $userid) {
+            debugging(
+                'tool_zoomapi: Zoom user ' . $zoomuserid . ' is already mapped to Moodle user ' . $existing->userid,
+                DEBUG_DEVELOPER
+            );
+            return;
+        }
+
         $mapping = (object) [
             'userid' => $userid,
             'zoom_userid' => $zoomuserid,
@@ -243,12 +255,15 @@ final class helper {
             'timemodified' => di::get(clock::class)->time(),
         ];
 
-        if ($record) {
-            $mapping->id = $record->id;
-            $DB->update_record('tool_zoomapi_user_mappings', $mapping);
-            return;
+        try {
+            if ($record) {
+                $mapping->id = $record->id;
+                $DB->update_record('tool_zoomapi_user_mappings', $mapping);
+            } else {
+                $DB->insert_record('tool_zoomapi_user_mappings', $mapping);
+            }
+        } catch (dml_write_exception $e) {
+            debugging('tool_zoomapi: could not store user mapping: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
-
-        $DB->insert_record('tool_zoomapi_user_mappings', $mapping);
     }
 }

@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_zoomapi';
-$plugin->version = 2026062400;
+$plugin->version = 2026100600;
 $plugin->requires = 2024100700;
-$plugin->release = 'v1.0.0';
+$plugin->release = 'v1.0.1';
 $plugin->maturity = MATURITY_STABLE;
